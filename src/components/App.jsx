@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import IndexRouter from "components/Router";
 import firebase from "firebase/compat/app";
-import { authService } from "fBase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const App = () => {
@@ -9,12 +8,17 @@ const App = () => {
   // app이 초기화 되기 전
   const [init, setInit] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userObj, setUserObj] = useState(null);
+
   useEffect(() => {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsLoggedIn(true);
-        const uid = user.uid;
+        // auth가 setUserObj에 바꾸면, user넣기
+        // 로그인 한 user를 받을 수 있음.
+        // userObj를 Router를 통해 전달
+        setUserObj(user);
       } else {
         setIsLoggedIn(false);
       }
@@ -23,8 +27,11 @@ const App = () => {
   }, []);
   return (
     <div>
-      {init ? <IndexRouter isLoggedIn={isLoggedIn} /> : "Initializing..."}
-      <footer>&copy; Nwitter {new Date().getFullYear()}</footer>
+      {init ? (
+        <IndexRouter userObj={userObj} isLoggedIn={isLoggedIn} />
+      ) : (
+        "Initializing..."
+      )}
     </div>
   );
 };
