@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import IndexRouter from "components/Router";
 import firebase from "firebase/compat/app";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, updateProfile } from "firebase/auth";
+import { authService } from "fBase";
 
 const App = () => {
   //state
@@ -21,14 +22,26 @@ const App = () => {
         setUserObj(user);
       } else {
         setIsLoggedIn(false);
+        setUserObj("");
       }
       setInit(true);
     });
   }, []);
+
+  const refreshUser = async () => {
+    const user = authService.currentUser;
+    //user를 새로고침
+    setUserObj({ ...user });
+  };
+
   return (
     <div>
       {init ? (
-        <IndexRouter userObj={userObj} isLoggedIn={isLoggedIn} />
+        <IndexRouter
+          userObj={userObj}
+          refreshUser={refreshUser}
+          isLoggedIn={isLoggedIn}
+        />
       ) : (
         "Initializing..."
       )}
