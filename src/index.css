@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap");
+#root,
+body,
+html {
+  margin: 0;
+  padding: 0;
+  background-color: #15202b;
+  font-family: "Noto Sans KR", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 100%;
+}
+
+body::-webkit-scrollbar-thumb {
+  height: 95%;
+  background-color: #1d9bf0;
+  border-radius: 10px;
+}

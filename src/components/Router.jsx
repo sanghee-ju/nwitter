@@ -13,7 +13,10 @@ const IndexRouter = ({ isLoggedIn, userObj, refreshUser }) => {
         {isLoggedIn ? (
           <>
             {/* 로그인한 사용자 정보 Home으로 보내주기 */}
-            <Route path="/" element={<Home userObj={userObj} />} />
+            <Route
+              path="/"
+              element={<Home userObj={userObj} refreshUser={refreshUser} />}
+            />
             <Route
               path="/profile"
               element={<Profile userObj={userObj} refreshUser={refreshUser} />}

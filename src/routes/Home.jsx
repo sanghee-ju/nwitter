@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { dbService } from "fBase";
 import Nweet from "components/Nweet";
-
+import styled from "styled-components";
 import NweetFactory from "components/NweetFactory";
 
-const Home = ({ userObj }) => {
+const Home = ({ userObj, refreshUser }) => {
   /* State */
   // nweets collection에 담긴 document 가져오기
   const [nweets, setNweets] = useState([]);
@@ -28,7 +28,13 @@ const Home = ({ userObj }) => {
 
   /* Render */
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "430px",
+      }}
+    >
       {/* tweet용 form */}
       <NweetFactory userObj={userObj} />
       <div>
@@ -36,6 +42,7 @@ const Home = ({ userObj }) => {
           <Nweet
             key={nweet.id}
             nweetObj={nweet}
+            refreshUser={refreshUser}
             isOwner={nweet.creatorId === userObj.uid}
           />
         ))}

@@ -1,16 +1,85 @@
-import { async } from "@firebase/util";
+import React, { useState, useRef } from "react";
 import { dbService, storageService } from "fBase";
+import { v4 } from "uuid";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { deleteObject, getStorage, ref } from "firebase/storage";
-import React, { useState } from "react";
+import {
+  deleteObject,
+  getStorage,
+  ref,
+  uploadString,
+  getDownloadURL,
+} from "firebase/storage";
+import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import { BiEdit } from "react-icons/bi";
+import styled from "styled-components";
 
-const Nweet = ({ nweetObj, isOwner }) => {
+const NweetTemplateBlock = styled.div`
+  background-color: #f5f6fa;
+  min-height: 100px;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const EditFormTemplate = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const EditInput = styled.input`
+  height: 40px;
+  width: 95%;
+  border: none;
+  outline: none;
+  background-color: transparent;
+`;
+
+const EditButonBlock = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const EditBtn = styled.button`
+  width: 70px;
+  height: 30px;
+  border-radius: 30px;
+  border: 1.5px solid #1d9bf0;
+  outline: none;
+  cursor: pointer;
+  background-color: #1d9bf0;
+  color: #f5f6fa;
+  margin-right: 10px;
+  &:hover {
+    background-color: transparent;
+    color: #1d9bf0;
+  }
+`;
+
+const EditAreaBlock = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  font-size: 18px;
+`;
+
+const ImageTemplate = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Nweet = ({ nweetObj, isOwner, refreshUser }) => {
   const [editting, setEditting] = useState(false);
   // 수정값
   const [newNweet, setNewNweet] = useState(nweetObj.text);
+  const [attachment, setAttachment] = useState(nweetObj.fileUrl);
   //리터럴 - 아마 filter 작업..!
   const target = doc(dbService, "nweets", `${nweetObj.id}`);
-
+  const fileInput = useRef();
   const onDeleteClick = async () => {
     //:삭제 전 확인 작업 => true | false
     const ok = confirm("Are you sure you want to delete this nweet?");
@@ -43,12 +112,43 @@ const Nweet = ({ nweetObj, isOwner }) => {
     setEditting((prev) => !prev);
   };
 
+  const onFileChange = (e) => {
+    // input:file에 입력된 file 가져오기
+    const {
+      target: { files },
+    } = e;
+    // file의 이미지 파일 가져오기
+    const theFile = files[0];
+    // 파일 리더 api 사용하기
+    const reader = new FileReader();
+    reader.onloadend = (finishedEvent) => {
+      // 파일 읽기 끝나면, finishedEvent 받음
+      const {
+        currentTarget: { result },
+      } = finishedEvent;
+      setAttachment(result);
+    };
+    // 파일 읽기 시작 ---
+    reader.readAsDataURL(theFile);
+    console.log(theFile);
+  };
+
   // 수정값 제출하기
   const onSubmit = async (e) => {
     e.preventDefault();
-    console.log(nweetObj, newNweet);
-    await updateDoc(target, { text: newNweet });
+    let fileUrl = "";
+    if (attachment !== "") {
+      //image 업로드
+      const fileRef = ref(storageService, `${nweetObj.id}/${v4()}`);
+      // storage 참조 경로로 파일 업로드 하기
+      //v4 => image file에 이름주기
+      const response = await uploadString(fileRef, attachment, "data_url");
+      // storage 참조 경로에 있는 파일의 URL을 다운로드해서 fileUrl 변수에 넣어 업로드
+      fileUrl = await getDownloadURL(response.ref);
+    }
+    await updateDoc(target, { text: newNweet, fileUrl: fileUrl });
     setEditting(false);
+    refreshUser();
   };
   // 수정값 입력시
   const onChange = (e) => {
@@ -57,37 +157,92 @@ const Nweet = ({ nweetObj, isOwner }) => {
     } = e;
     setNewNweet(value);
   };
+
+  /* Style Block */
+
   return (
-    <div>
+    <NweetTemplateBlock>
       {editting ? (
-        <>
-          <form onSubmit={onSubmit}>
-            <input
+        <EditFormTemplate>
+          <form
+            onSubmit={onSubmit}
+            style={{ height: "80%", display: "flex", flexDirection: "column" }}
+          >
+            <EditInput
               type="text"
               placeholder="Edit your nweet"
               value={newNweet}
               onChange={onChange}
               required
             />
-            <input type="submit" value="Update Nweet" />
+            <label htmlFor="editFile">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "15px",
+                  cursor: "pointer",
+                  color: "#2d3436",
+                }}
+              >
+                <BiEdit style={{ fontSize: "20px" }} />
+                <span>이미지 변경</span>
+              </div>
+              <input
+                type="file"
+                ref={fileInput}
+                onChange={onFileChange}
+                accept="image/*"
+                id="editFile"
+                style={{ display: "none" }}
+              />
+            </label>
+            <img
+              src={attachment}
+              width="80px"
+              height="80px"
+              style={{ borderRadius: "5px" }}
+            />
           </form>
-          <button onClick={toggleEditing}>Cancel</button>
-        </>
+
+          <EditButonBlock>
+            <EditBtn onClick={onSubmit}>Update</EditBtn>
+            <EditBtn onClick={toggleEditing}>Cancel</EditBtn>
+          </EditButonBlock>
+        </EditFormTemplate>
       ) : (
         <div>
-          <h4>{nweetObj.text}</h4>
-          {nweetObj.fileUrl && (
-            <img src={nweetObj.fileUrl} width="50px" height="50px" />
+          {isOwner ? (
+            <EditAreaBlock>
+              <div
+                onClick={onDeleteClick}
+                style={{ marginRight: "10px", cursor: "pointer" }}
+              >
+                <AiOutlineDelete />
+              </div>
+              <div onClick={toggleEditing}>
+                <AiOutlineEdit />
+              </div>
+            </EditAreaBlock>
+          ) : (
+            <div style={{ height: "20px" }}></div>
           )}
-          {isOwner && (
-            <>
-              <button onClick={onDeleteClick}>Delete Nweet</button>
-              <button onClick={toggleEditing}>Edit Nweet</button>
-            </>
-          )}
+          <div style={{ marginBottom: "20px" }}>{nweetObj.text}</div>
+          <ImageTemplate>
+            {nweetObj.fileUrl && (
+              <img
+                src={attachment}
+                style={{
+                  width: "70%",
+                  aspectRatio: "1/1",
+                  borderRadius: "10px",
+                }}
+              />
+            )}
+          </ImageTemplate>
         </div>
       )}
-    </div>
+    </NweetTemplateBlock>
   );
 };
 

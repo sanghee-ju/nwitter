@@ -4,11 +4,53 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import styled from "styled-components";
+
+const AuthFormTemplateBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const SignInForm = styled.form`
+  width: 100%;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  color: tomato;
+`;
+
+const FormInput = styled.input`
+  height: 40px;
+  border-radius: 40px;
+  border: none;
+  outline: none;
+  padding-left: 10px;
+  margin-bottom: 10px;
+`;
+
+const FormSubmit = styled.input`
+  height: 40px;
+  border-radius: 40px;
+  border: none;
+  outline: none;
+  padding-left: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background-color: #1d9bf0;
+  color: white;
+
+  &:hover {
+    opacity: 0.9;
+    transition: 0.3s;
+  }
+`;
 
 const AuthForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [newAccount, setNewAccount] = useState(true);
+  const [newAccount, setNewAccount] = useState(false);
   const [error, setError] = useState("");
   let data = "";
   const auth = getAuth();
@@ -37,7 +79,11 @@ const AuthForm = () => {
       setPassword("");
       console.log(data);
     } catch (error) {
-      setError(error.message);
+      if (error.message === "Firebase: Error (auth/invalid-email).") {
+        setError("Unvalid Email :( Try Again");
+      } else {
+        setError(error.message);
+      }
     }
   };
 
@@ -45,17 +91,17 @@ const AuthForm = () => {
     setNewAccount((prev) => !prev);
   };
   return (
-    <>
-      <form onSubmit={onSubmit}>
-        <input
+    <AuthFormTemplateBlock>
+      <SignInForm onSubmit={onSubmit}>
+        <FormInput
           type="text"
           name="email"
-          placeholder="email"
+          placeholder="Email"
           value={email}
           onChange={onChange}
           required
         />
-        <input
+        <FormInput
           type="password"
           name="password"
           placeholder="Password"
@@ -63,16 +109,19 @@ const AuthForm = () => {
           onChange={onChange}
           required
         />
-        <input
+        <FormSubmit
           type="submit"
-          value={newAccount ? "CREATE ACOOUNT" : "SIGN IN"}
+          value={newAccount ? "Create Account" : "Sign In"}
         />
-        {error}
-      </form>
-      <span onClick={toggleAccount}>
-        {newAccount ? "SIGN IN" : "Create Account"}
-      </span>
-    </>
+      </SignInForm>
+      <div style={{ color: "tomato" }}>{error}</div>
+      <div
+        onClick={toggleAccount}
+        style={{ marginBottom: "10px", color: "#1d9bf0", cursor: "pointer" }}
+      >
+        {newAccount ? "Sign In" : "Create Account"}
+      </div>
+    </AuthFormTemplateBlock>
   );
 };
 

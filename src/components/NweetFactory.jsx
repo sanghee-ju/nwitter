@@ -3,6 +3,98 @@ import { collection, addDoc } from "firebase/firestore";
 import { dbService, storageService } from "fBase";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
+import styled from "styled-components";
+import { BsArrowRightShort } from "react-icons/bs";
+import { AiOutlinePlus } from "react-icons/ai";
+
+/* Style Block */
+const NweetFactoryForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const SubmitNweet = styled.div`
+  height: 50px;
+  display: flex;
+  border: 1.3px solid #1d9bf0;
+  border-radius: 60px;
+`;
+
+const NweetInput = styled.input`
+  width: 90%;
+  height: 90%;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  background: transparent;
+  padding-left: 10px;
+  color: #1d9bf0;
+
+  &::placeholder {
+    color: #1d9bf0;
+  }
+`;
+
+const SubmitBtn = styled.div`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  outline: none;
+  display: flex;
+  background-color: #1d9bf0;
+  color: white;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  cursor: pointer;
+`;
+
+const ImageAttatchLabel = styled.label`
+  textalign: center;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  color: #1d9bf0;
+  margin-top: 10px;
+`;
+
+const PreviewTemplateBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  margin-top: 5px;
+  align-items: center;
+`;
+
+const PreviewImage = styled.img`
+  width: 90%;
+  aspect-ratio: 1/1;
+  margin-bottom: 5px;
+  border-radius: 10px;
+`;
+
+const PreviewImageDelete = styled.button`
+  width: 90%;
+  border-radius: 20px;
+  border: 1.5px solid #1d9bf0;
+  outline: none;
+  background-color: #1d9bf0;
+  color: white;
+  padding: 5px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: transparent;
+    color: #1d9bf0;
+  }
+`;
 
 const NweetFactory = ({ userObj }) => {
   /* State */
@@ -82,32 +174,46 @@ const NweetFactory = ({ userObj }) => {
   const onClearAttachment = () => {
     setAttachment("");
   };
+
   /* Render */
   return (
-    <form onSubmit={onSubmit}>
-      <input
-        type="text"
-        placeholder="What's on your mind"
-        maxLength={120}
-        name="tweet"
-        value={nweet}
-        onChange={onChange}
-      />
+    <NweetFactoryForm onSubmit={onSubmit}>
+      <SubmitNweet>
+        <NweetInput
+          type="text"
+          placeholder="무슨 생각을 하고 있나요?"
+          maxLength={120}
+          name="tweet"
+          value={nweet}
+          onChange={onChange}
+        />
+        <SubmitBtn onClick={onSubmit}>
+          <BsArrowRightShort />
+        </SubmitBtn>
+      </SubmitNweet>
       {/* 파일 입력기 */}
-      <input
-        type="file"
-        ref={fileInput}
-        accept="image/*"
-        onChange={onFileChange}
-      />
-      <input type="submit" value="Ntweet" />
+      <ImageAttatchLabel htmlFor="attachImage">
+        <span style={{ marginRight: "5px" }}>Add Photo</span>
+        <AiOutlinePlus />
+        <input
+          type="file"
+          ref={fileInput}
+          accept="image/*"
+          onChange={onFileChange}
+          id="attachImage"
+          style={{ display: "none" }}
+        />
+      </ImageAttatchLabel>
+
       {attachment && (
-        <div>
-          <img src={attachment} width="50px" height="50px" />
-          <button onClick={onClearAttachment}>clear</button>
-        </div>
+        <PreviewTemplateBlock>
+          <PreviewImage src={attachment} />
+          <PreviewImageDelete onClick={onClearAttachment}>
+            Clear!
+          </PreviewImageDelete>
+        </PreviewTemplateBlock>
       )}
-    </form>
+    </NweetFactoryForm>
   );
 };
 
