@@ -1,6 +1,7 @@
 import { async } from "@firebase/util";
-import { dbService } from "fBase";
+import { dbService, storageService } from "fBase";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { deleteObject, getStorage, ref } from "firebase/storage";
 import React, { useState } from "react";
 
 const Nweet = ({ nweetObj, isOwner }) => {
@@ -9,14 +10,31 @@ const Nweet = ({ nweetObj, isOwner }) => {
   const [newNweet, setNewNweet] = useState(nweetObj.text);
   //리터럴 - 아마 filter 작업..!
   const target = doc(dbService, "nweets", `${nweetObj.id}`);
+
   const onDeleteClick = async () => {
     //:삭제 전 확인 작업 => true | false
     const ok = confirm("Are you sure you want to delete this nweet?");
+    // 삭제할 파일의 reference 만들기
+    const storage = getStorage();
+    const deleteRef = ref(storage, nweetObj.fileUrl);
+
     if (ok) {
       //delete nweet
       console.log("삭제!");
       //삭제하기
       await deleteDoc(target);
+      // 파일 삭제하기
+      if (nweetObj.fileUrl !== "") {
+        deleteObject(deleteRef)
+          .then(() => {
+            //file delete successfully
+            alert("파일 삭제가 완료되었습니다!");
+          })
+          .catch((err) => {
+            // Uh-oh,,, an error occured!
+            alert("오류가 발생하였습니다:(");
+          });
+      }
     }
   };
 
@@ -58,6 +76,9 @@ const Nweet = ({ nweetObj, isOwner }) => {
       ) : (
         <div>
           <h4>{nweetObj.text}</h4>
+          {nweetObj.fileUrl && (
+            <img src={nweetObj.fileUrl} width="50px" height="50px" />
+          )}
           {isOwner && (
             <>
               <button onClick={onDeleteClick}>Delete Nweet</button>
